@@ -2,10 +2,9 @@ use std::str::FromStr;
 //mod scraper;
 use serde::{Deserialize,Serialize};
 use warp::Filter;
-use warp::http::Uri;
-use warp::http::uri::InvalidUri;
+use warp::http::{Uri,uri::{InvalidUri}};
 
-mod scraper;
+mod WebScraper;
 #[tokio::main]
 async fn main() {
 
