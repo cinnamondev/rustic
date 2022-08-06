@@ -1,5 +1,7 @@
 use warp::http::Uri;
-use scraper::Html;
+use scraper::{Html, Selector};
+use serde::de::Error;
+
 // Stores Open Graph protocol metadata
 struct OpenGraph {
     url: Uri,
@@ -12,7 +14,14 @@ struct OpenGraph {
 }
 
 struct Website(Uri);
-fn getDocument(url: Uri) -> Html {
-    
-    todo!()
+pub async fn getDocument(url: Uri) -> Result<String, reqwest::Error>{
+    let resp = Html::parse_document(
+        &reqwest::get("https://cinnamondev.github.io/")
+        .await?
+        .text()
+        .await?
+    );
+    let selector = Selector::parse("meta").unwrap();
+    let a = resp.select(&selector).map(|e| {e.html()}).collect();
+    Ok(a)
 }

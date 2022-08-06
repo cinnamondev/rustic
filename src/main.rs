@@ -6,8 +6,14 @@ use warp::http::{Uri,uri::{InvalidUri}};
 
 mod WebScraper;
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), reqwest::Error>{
 
+    //println!("aaa {:#?}",resp);
+    let a =WebScraper::getDocument(Uri::from_str("www.google.com").unwrap()).await?;
+    println!("{}",a);
+
+    return Ok(());
+    //WebScraper::getDocument(Uri::from_str(&"www.google.com").unwrap());
     // GET /hello/warp => 200 OK with body "Hello, warp!"
     let scrape = warp::get()
         .and(warp::path("scrape"))
@@ -18,6 +24,7 @@ async fn main() {
                     Err(e) => warp::reply::json(&(e.to_string()))
                 }
             }));
+
 
     warp::serve(scrape)
         .run(([127, 0, 0, 1], 7878))
