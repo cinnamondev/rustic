@@ -1,24 +1,69 @@
+#![feature(once_cell)]
+
 use warp::http::Uri;
-use scraper::{Html, Selector};
+use scraper::{Html, Selector, selector};
+use cssparser::ParseError;
 use serde::de::Error;
+use std::lazy::Lazy;
+use warp::test::request;
 
-
-enum OgType {
-    Title(string),
-
+enum ScraperError {
+    BadRequest(reqwest::Error)
 }
-// Stores Open Graph protocol metadata
-struct OpenGraph {
-    url: Uri,
+
+enum GrabberError {
+    BadSelector
+}
+
+#[derive(Default)]
+struct MetaData {
     title: String,
-    // url and title are mandatory metadata
-    site_name: Option<String>, // (url fallbacks on scraped uri, title fallbacks on url)
+    wtype: String,
+    image: String,
+    url: String,
+    audio: Option<String>,
     description: Option<String>,
-    image: Option<Uri>,
-    video: Option<Uri>
+    determiner: Option<String>,
+    locale: Option<String>,
+    alt_locale: Option<String>,
+    site_name: Option<String>,
+    video: Option<String>,
+}
+struct Website {
+    url: Uri,
+    contents: Option<Html>
 }
 
-struct Website(Uri);
+impl Website {
+    async fn get_document(uri: Uri) -> Result<Html, reqwest::Error> {
+        let response = Html::parse_document(
+            reqwest::get::<Uri>(&*uri)
+            .await?
+            .text()
+            .await?
+        );
+        Ok(response)
+    }
+    async fn new(uri: Uri) -> Self {
+        Self {
+            url: &*uri,
+            contents:
+                match Website::get_document(uri).await {
+                    Ok(t) => Some(t),
+                    Err(e) => None
+                }
+        }
+    }
+
+}
+
+impl OpenGraph {
+    fn new(uri: Uri) -> Self {
+        Self {
+            url: uri.to_string(),
+        }
+    } 
+}
 
 pub async fn scrape_meta(url: Uri) -> Result<OpenGraph, dyn Error> {
     
@@ -26,8 +71,7 @@ pub async fn scrape_meta(url: Uri) -> Result<OpenGraph, dyn Error> {
     todo!()
 }
 
-pub async fn parse_element(elem: ElementRef) -> 
-pub async fn get_og_elements(url: Uri) -> Result<String, reqwest::Error>{
+pub async fn meta_from_document(url: Uri) -> Result<String, reqwest::Error>{
     let resp = Html::parse_document(
         &reqwest::get("https://cinnamondev.github.io/")
         .await?
@@ -39,3 +83,22 @@ pub async fn get_og_elements(url: Uri) -> Result<String, reqwest::Error>{
     Ok(a)
 }
 
+fn 
+
+impl TryFrom<Website> for OpenGraph {
+    type Error = ParserError;
+    fn try_from(value: Html) -> Result<Self, Self::Error> {
+       let string = value.text();
+       let s = Selector::parse(r#"meta[property^="og"]"#);
+       match s {
+           Ok(selector) => {
+               let meta = OpenGraph::
+               let a = value.select(&selector). ;
+           },
+           Err(_) => {
+               // wasn't sure how to handle this crate... :/ TODO: fix later?
+               Err(GrabberError::BadSelector)
+           }
+       }
+    }
+}
